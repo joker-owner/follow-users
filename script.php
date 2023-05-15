@@ -81,7 +81,7 @@ function getFollowings($token) {
     $z = 1;
     $following = [];
 
-    while ($z <= 30) {
+    while ($z <= 50) {
         $list = json_decode(
             getUsers($token, "following", $z),
             true
@@ -102,7 +102,9 @@ $srcToken = $argv[1];
 $destToken = $argv[2];
 
 $srcFollowing = getFollowings($srcToken);
+echo "Load following list of srcUser(".count($srcFollowing).")\n";
 $destFollowing = getFollowings($destToken);
+echo "Load following list of destUser(".count($destFollowing).")\n";
 $loginArr = [];
 
 foreach ($destFollowing as $destFl) {
@@ -112,7 +114,8 @@ foreach ($destFollowing as $destFl) {
 foreach ($srcFollowing as $fl) {
     if (!in_array($fl["login"], $loginArr)) {
         doAction($destToken, "PUT", $fl["login"]);
-        sleep(12);
+        echo "User ".$fl["login"]."\t added to following\n";
+        sleep(15);
     }
 }
 
