@@ -98,25 +98,90 @@ function getFollowings($token) {
     return $following;
 }
 
-$srcToken = $argv[1];
-$destToken = $argv[2];
+function getFollowers($token) {
+    $z = 1;
+    $following = [];
 
-$srcFollowing = getFollowings($srcToken);
-echo "Load following list of srcUser(".count($srcFollowing).")\n";
-$destFollowing = getFollowings($destToken);
-echo "Load following list of destUser(".count($destFollowing).")\n";
-$loginArr = [];
-
-foreach ($destFollowing as $destFl) {
-    array_push($loginArr, $destFl["login"]);
+    while ($z <= 50) {
+        $list = json_decode(
+            getUsers($token, "followers", $z),
+            true
+        );
+        if (count($list) == 0) {
+            break;
+        }
+        if ($GLOBALS["message"] != "") {
+            break;
+        }
+        $following = array_merge($list, $following);
+        $z++;
+    }
+    return $following;
 }
 
-foreach ($srcFollowing as $fl) {
-    if (!in_array($fl["login"], $loginArr)) {
-        doAction($destToken, "PUT", $fl["login"]);
-        echo "User ".$fl["login"]."\t added to following\n";
-        sleep(15);
+$mode = $argv[1];
+$srcToken = $argv[2];
+$destToken = $argv[3];
+
+if ($mode == "-c") {
+    copyList($srcToken, $destToken);
+} else if ($mode == "-a") {
+    adjustList($srcToken, $destToken);
+} else if ($mode == "-d") {
+    deleteList($srcToken);
+} else {
+    echo "Something went wrong.\n";
+}
+
+function copyList($srcToken, $destToken) {
+    $srcFollowing = getFollowings($srcToken);
+    echo "Load following list of srcUser(".count($srcFollowing).")\n";
+    $destFollowing = getFollowings($destToken);
+    echo "Load following list of destUser(".count($destFollowing).")\n";
+    $loginArr = [];
+    
+    foreach ($destFollowing as $destFl) {
+        array_push($loginArr, $destFl["login"]);
     }
+    
+    foreach ($srcFollowing as $fl) {
+        if (!in_array($fl["login"], $loginArr)) {
+            doAction($destToken, "PUT", $fl["login"]);
+            echo "User ".$fl["login"]."\t added to following\n";
+            sleep(15);
+        }
+    }    
+}
+
+function adjustList($srcToken, $destToken) {
+    $srcFollowing = getFollowings($srcToken);
+    echo "Load following list of srcUser(".count($srcFollowing).")\n";
+    $srcFollowers = getFollowers($srcToken);
+    echo "Load follower list of srcUser(".count($srcFollowers).")\n";
+    $loginArr = [];
+    
+    foreach ($srcFollowers as $fl) {
+        array_push($loginArr, $fl["login"]);
+    }
+
+    foreach ($srcFollowing as $fl) {
+        if (!in_array($fl["login"], $loginArr)) {
+            doAction($srcToken, "DELETE", $fl["login"]);
+            echo "User ".$fl["login"]."\t removed from following\n";
+            sleep(15);
+        }
+    }  
+}
+
+function deleteList($srcToken) {
+    $srcFollowing = getFollowings($srcToken);
+    echo "Load following list of srcUser(".count($srcFollowing).")\n";
+
+    foreach ($srcFollowing as $fl) {
+        doAction($srcToken, "DELETE", $fl["login"]);
+        echo "User ".$fl["login"]."\t removed from following\n";
+        sleep(15);
+    }  
 }
 
 ?>
