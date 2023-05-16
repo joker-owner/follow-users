@@ -119,18 +119,27 @@ function getFollowers($token) {
     return $following;
 }
 
+function validation($array, $idx, $name) {
+    if (!isset($array[$idx])) {
+        echo "Need ".$name."\n";
+        exit;
+    }
+}
+
 $mode = $argv[1];
-$srcToken = $argv[2];
-$destToken = $argv[3];
 
 if ($mode == "-c") {
-    copyList($srcToken, $destToken);
+    validation($argv, 2, "srcToken");
+    validation($argv, 3, "descToken");
+    copyList($argv[2], $argv[3]);
 } else if ($mode == "-a") {
-    adjustList($srcToken, $destToken);
+    validation($argv, 2, "srcToken");
+    adjustList($argv[2]);
 } else if ($mode == "-d") {
-    deleteList($srcToken);
+    validation($argv, 2, "srcToken");
+    deleteList($argv[2]);
 } else {
-    echo "Something went wrong.\n";
+    echo "Unknown mode parameter ".$argv[1]."\n";
 }
 
 function copyList($srcToken, $destToken) {
@@ -153,7 +162,7 @@ function copyList($srcToken, $destToken) {
     }    
 }
 
-function adjustList($srcToken, $destToken) {
+function adjustList($srcToken) {
     $srcFollowing = getFollowings($srcToken);
     echo "Load following list of srcUser(".count($srcFollowing).")\n";
     $srcFollowers = getFollowers($srcToken);
